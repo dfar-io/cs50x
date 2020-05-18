@@ -104,17 +104,35 @@ void blur(int height, int width, RGBTRIPLE image[height][width])
     return;
 }
 
+// Computes an edge result
+int edge_result(int sumX, int sumY)
+{
+    int result = (double)round(sqrt(pow(sumX, 2) + pow(sumY, 2)));
+    if (result > 255)
+    {
+        result = 255;
+    }
+
+    return result;
+}
+
 // Detect edges
 void edges(int height, int width, RGBTRIPLE image[height][width])
 {
-    int Gx[3][3] = {{ -1, 0, 1 }, { -2, 0, 2 }, { -1, 0, 1 }};
-    int Gy[3][3] = {{ -1, -2, -1 }, { 0, 0, 0 }, { 1, 2, 1 }};
+    int Gx[3][3] = {{ -1, 0, 1 },
+        { -2, 0, 2 },
+        { -1, 0, 1 }
+    };
+    int Gy[3][3] = {{ -1, -2, -1 },
+        { 0, 0, 0 },
+        { 1, 2, 1 }
+    };
     RGBTRIPLE moddedImage[height][width];
 
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
-            {
+        {
             // Get average of all neighboring values
             int redSumX = 0;
             int greenSumX = 0;
@@ -127,7 +145,7 @@ void edges(int height, int width, RGBTRIPLE image[height][width])
                 for (int l = -1; l <= 1; l++)
                 {
                     // Points to a space that exists?
-                    if (i + k >= 0 && i + k < height - 1 && j + l >= 0 && j + l < width - 1)
+                    if (i + k >= 0 && i + k < height && j + l >= 0 && j + l < width)
                     {
                         redSumX += image[i + k][j + l].rgbtRed * Gx[k + 1][l + 1];
                         redSumY += image[i + k][j + l].rgbtRed * Gy[k + 1][l + 1];
@@ -139,28 +157,9 @@ void edges(int height, int width, RGBTRIPLE image[height][width])
                 }
             }
 
-            // Record image
-            int redResult = pow(redSumX, 2) + pow(redSumY, 2);
-            if (redResult > 255)
-            {
-                redResult = 255;
-            }
-
-            int greenResult = pow(greenSumX, 2) + pow(greenSumY, 2);
-            if (greenResult > 255)
-            {
-                greenResult = 255;
-            }
-
-            int blueResult = pow(blueSumX, 2) + pow(blueSumY, 2);
-            if (blueResult > 255)
-            {
-                blueResult = 255;
-            }
-
-            moddedImage[i][j].rgbtRed = redResult;
-            moddedImage[i][j].rgbtGreen = greenResult;
-            moddedImage[i][j].rgbtBlue = blueResult;
+            moddedImage[i][j].rgbtRed = edge_result(redSumX, redSumY);
+            moddedImage[i][j].rgbtGreen = edge_result(greenSumX, greenSumY);
+            moddedImage[i][j].rgbtBlue = edge_result(blueSumX, blueSumY);
         }
     }
 
