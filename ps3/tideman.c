@@ -33,6 +33,7 @@ void add_pairs(void);
 void sort_pairs(void);
 void lock_pairs(void);
 void print_winner(void);
+bool can_cycle(int origin, int row);
 
 int main(int argc, string argv[])
 {
@@ -166,36 +167,27 @@ void add_pairs(void)
     return;
 }
 
-void sort(int array[][])
-{
-    mergeSort(array, 0, sizeof(array) - 1);
-}
-
-void mergeSort(int array[][], int leftIndex, int rightIndex)
-{
-
-}
-
-void merge()
-{
-
-}
-
 // Sort pairs in decreasing order by strength of victory
 void sort_pairs(void)
-{   // Initialize strength count based on pairs (determines the win counts)
-    // first value is pair index
-    // second value is win count
-    int strength_count[pair_count][pair_count];
-    for (int i = 0; i < pair_count; i++)
+{
+    // Uses bubble sort (yuck) to look up preferences table to check pair strength
+    for (int i = 0; i < pair_count - 1; i++)
     {
-        strength_count[i][0] = i;
-        strength_count[i][1] = preferences[pairs[i].winner][pairs[i].loser];
-    }
+        for (int j = i + 1; j < pair_count; j++)
+        {
+            if (preferences[pairs[i].winner][pairs[i].loser] < preferences[pairs[j].winner][pairs[j].loser])
+            {
+                int tempWinner = pairs[i].winner;
+                int tempLoser = pairs[i].loser;
 
-    // Sort the pairs based on strength (using merge sort modified to use 2d array)
-    // TODO
-    // I'm planning to merge sort a modified array that holds the original pair index
+                pairs[i].winner = pairs[j].winner;
+                pairs[i].loser = pairs[j].loser;
+
+                pairs[j].winner = tempWinner;
+                pairs[j].loser = tempLoser;
+            }
+        }
+    }
 
     return;
 }
@@ -203,14 +195,64 @@ void sort_pairs(void)
 // Lock pairs into the candidate graph in order, without creating cycles
 void lock_pairs(void)
 {
-    // TODO
+    for (int i = 0; i < pair_count; i++)
+    {
+        if (!can_cycle(pairs[i].winner, pairs[i].loser))
+        {
+            locked[pairs[i].winner][pairs[i].loser] = 1;
+        }
+    }
+
     return;
 }
 
-// Print the winner of the election
+// Checks if a path can be created from the origin based on the row lookup in locked table
+bool can_cycle(int origin, int row)
+{
+    for (int i = 0; i < candidate_count; i++)
+    {
+        // Base: Found a path to original
+        if (locked[row][origin] == 1)
+        {
+            return true;
+        }
+
+        // Provides a path, check into it further
+        if (locked[row][i] == 1)
+        {
+            return can_cycle(origin, i);
+        }
+    }
+
+    // Did not find a valid path
+    return false;
+}
+
+// Check to see if a candidate is an origin in graph
+bool is_origin(int candidate_index)
+{
+    for (int row = 0; row < candidate_count; row++)
+    {
+        if (locked[row][candidate_index] == 1)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Print the winner of the election, find users without arrows pointing
 void print_winner(void)
 {
-    // TODO
+    for (int i = 0; i < candidate_count; i++)
+    {
+        if (is_origin(i))
+        {
+            printf("%s\n", candidates[i]);
+        }
+    }
+
     return;
 }
 
